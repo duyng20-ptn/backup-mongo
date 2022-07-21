@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-configmap
+data:
+  region: "us-east-1"
+  s3-bucket: "nkduy-mongobackup"

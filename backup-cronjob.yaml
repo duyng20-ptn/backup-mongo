@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-backup
+  namespace: default   # namespace where the cronjob will be deployed
+spec:
+  schedule: "*/2 * * * *"   # this runs the container every 5 minutes you can change this to any time you want.
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: db-backup
+              image: cronjob-server:v2
+              command: ["/bin/bash", "-c", "sh ./awesome_backup.sh"]       #command to run when container starts
+              imagePullPolicy: IfNotPresent
+              env:
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: backup-secrets
+                    key: aws-id
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: backup-secrets
+                    key: aws-secret
+              - name: MONGODB_URI
+                valueFrom:
+                  secretKeyRef:
+                    name: backup-secrets
+                    key: mongo-uri
+              - name: AWS_DEFAULT_REGION
+                valueFrom:
+                  configMapKeyRef:
+                    name: backup-configmap
+                    key: region
+              - name: S3_BUCKET
+                valueFrom:
+                  configMapKeyRef:
+                    name: backup-configmap
+                    key: s3-bucket
+          restartPolicy: Never
