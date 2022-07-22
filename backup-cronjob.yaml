@@ -4,16 +4,17 @@ metadata:
   name: db-backup
   namespace: default   # namespace where the cronjob will be deployed
 spec:
-  schedule: "*/2 * * * *"   # this runs the container every 5 minutes you can change this to any time you want.
+  schedule: "*/2 * * * *"   # this runs the container every 5 minutes you can change this to any time you want. 
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 10
       template:
         spec:
           containers:
             - name: db-backup
-              image: cronjob-server:v2
+              image: auto-backup:v1
               command: ["/bin/bash", "-c", "sh ./awesome_backup.sh"]       #command to run when container starts
               imagePullPolicy: IfNotPresent
               env:
