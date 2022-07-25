@@ -5,3 +5,44 @@ metadata:
 data:
   region: "us-east-1"
   s3-bucket: "nkduy-mongobackup"
+  collections: "promotion students"
+  excludes: "--excludeCollection=tracker --excludeCollection=test"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-script
+data:
+  backup_script.sh: |
+    #!/bin/bash
+    # config aws cli
+    aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    aws configure set region $AWS_DEFAULT_REGION
+
+    backup_dir=backup-`date "+%Y-%m-%d"`
+    mkdir /backup
+    mkdir /backup/$backup_dir
+
+
+    echo "Dumping db"
+
+    for db in $DBS
+    do
+        if mongodump --forceTableScan --uri $MONGODB_URI/$db $excludeCollections --gzip --archive="/backup/$backup_dir/$db.gz"
+        then
+          echo "dump for db $db"
+        else
+            echo "dump failed failed $db"
+        fi
+    done
+
+    echo "starting backup"
+
+    if aws s3 cp /backup/ s3://$S3_BUCKET/mongodb_backup/ --recursive
+    then
+        echo "Successfull to backup"
+    else
+        echo "Failed to backup"
+    fi
+

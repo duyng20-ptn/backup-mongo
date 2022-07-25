@@ -5,16 +5,25 @@ metadata:
   namespace: default   # namespace where the cronjob will be deployed
 spec:
   schedule: "*/2 * * * *"   # this runs the container every 5 minutes you can change this to any time you want.
-  successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 100
       template:
         spec:
+          volumes:
+          - name: script
+            configMap:
+              name: backup-script
+              defaultMode: 0777
           containers:
             - name: db-backup
-              image: cronjob-server:v2
-              command: ["/bin/bash", "-c", "sh ./awesome_backup.sh"]       #command to run when container starts
+              image: test:v5
+              volumeMounts:
+              - name: script
+                mountPath: /test
+              command: ["/bin/sh"] #, "-c", "/test/backup_script.sh"]       #command to run when container starts
+              args: ["-c", "/test/backup_script.sh"]
               imagePullPolicy: IfNotPresent
               env:
               - name: AWS_ACCESS_KEY_ID
@@ -42,4 +51,14 @@ spec:
                   configMapKeyRef:
                     name: backup-configmap
                     key: s3-bucket
+              - name: DBS
+                valueFrom:
+                  configMapKeyRef:
+                    name: backup-configmap
+                    key: collections
+              - name: excludeCollections 
+                valueFrom:
+                  configMapKeyRef:
+                    name: backup-configmap
+                    key: excludes
           restartPolicy: Never

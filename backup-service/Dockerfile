@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y mongo-tools
 RUN apt-get install -y awscli
 
 # copy mongodb backup script to /
-COPY ./awesome_backup.sh ./
+#COPY ./test.sh ./
 
-RUN chmod +x ./awesome_backup.sh
+#RUN chmod +x ./test.sh
 
 # Run the command on container startup
 CMD ["bash"]
